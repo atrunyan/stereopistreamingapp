@@ -4,6 +4,7 @@ from flask import Flask, render_template, Response
 from pistreaming import PiStreamer
 from picamera import PiCamera
 from time import sleep
+from datetime import datetime
 
 WIDTH = 640
 HEIGHT = 480
@@ -35,7 +36,16 @@ def index():
         streamer.start()
     return render_template('index.html')
 
+@app.route('/cmd/<cmd>')
+def cmd(cmd=None):
+    if cmd=='capture':
+        fname = f"/home/pi/Pictures/{datetime.now().isoformat().replace(':','')[:-7]}.jpeg"
+        print(fname)
+        camera.capture(fname, use_video_port=True)
+    else:
+        return f"{cmd}: failure", 200, {'Content-Type': 'text/plain'}
+    return f"{cmd}: success", 200, {'Content-Type': 'text/plain'}
 
 if __name__=='__main__':
-    app.run(host='0.0.0.0', threaded=True,debug=False,port=1234)
+    app.run(host='0.0.0.0', threaded=True, debug=False)
     
