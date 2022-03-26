@@ -20,10 +20,12 @@ from ws4py.server.wsgirefserver import (
 )
 from ws4py.server.wsgiutils import WebSocketWSGIApplication
 
+WebSocketWSGIHandler.http_version = '1.1'
+
 ###########################################
 # CONFIGURATION
-JSMPEG_MAGIC = b'jsmp'
-JSMPEG_HEADER = Struct('>4sHH')
+_JSMPEG_MAGIC = b'jsmp'
+_JSMPEG_HEADER = Struct('>4sHH')
 HTTP_PORT = 8082
 WS_PORT = 8084
 
@@ -83,21 +85,21 @@ class StreamingHttpServer(HTTPServer):
 
 class StreamingWebSocket(WebSocket):
     def opened(self):
-        self.send(JSMPEG_HEADER.pack(JSMPEG_MAGIC, WIDTH, HEIGHT), binary=True)
+        self.send(_JSMPEG_HEADER.pack(_JSMPEG_MAGIC, WIDTH, HEIGHT), binary=True)
 
 
-class BroadcastOutput(object):
-    def __init__(self, camera):
+class BroadcastOutput:
+    def __init__(self,resolution,framerate):
         self.converter = Popen([
             '/usr/bin/ffmpeg',
             '-f', 'rawvideo',
             '-pix_fmt', 'yuv420p',
-            '-s', '%dx%d' % camera.resolution,
-            '-r', str(float(camera.framerate)),
+            '-s', '%dx%d' % resolution,
+            '-r', str(float(framerate)),
             '-i', '-',
             '-f', 'mpeg1video',
             '-b', '800k',
-            '-r', str(float(camera.framerate)),
+            '-r', str(float(framerate)),
            '-'],
             stdin=PIPE, stdout=PIPE, stderr=io.open(os.devnull, 'wb'),
             shell=False, close_fds=True)
@@ -128,12 +130,14 @@ class BroadcastThread(Thread):
             self.converter.stdout.close()
 
 
-class PiStreamer(Thread):
-    def __init__(self,camera):
+class PiStreamer:
+    def __init__(self,resolution,framerate):
 
-        Thread.__init__(self)
-        self.camera = camera
-        WebSocketWSGIHandler.http_version = '1.1'
+        # TODO: allow for resize on call
+
+        self.resolution = resolution
+        self.framerate = framerate
+
         self.websocket_server = make_server(
             '', WS_PORT,
             server_class=WSGIServer,
@@ -142,26 +146,15 @@ class PiStreamer(Thread):
         self.websocket_server.initialize_websockets_manager()
         self.websocket_thread = Thread(
             target=self.websocket_server.serve_forever)
-        output = BroadcastOutput(self.camera)
-        self.broadcast_thread = BroadcastThread(output.converter,
+        
+        self.output = BroadcastOutput(self.resolution,self.framerate)
+        self.broadcast_thread = BroadcastThread(self.output.converter,
                                                 self.websocket_server)
-
-        self.camera.start_recording(output, 'yuv')
 
         self.websocket_thread.start()
         self.broadcast_thread.start()
-
-
-    def run(self):
-
-        while not self.websocket_server.manager.websockets:
-            pass
-        
-        while self.websocket_server.manager.websockets:
-            self.camera.wait_recording(1)
-
-        self.camera.stop_recording()
             
+    def shutdown(self):
         self.broadcast_thread.join()
         self.websocket_server.server_close()
         self.websocket_server.shutdown()
@@ -185,8 +178,8 @@ if __name__ == '__main__':
         camera.hflip = HFLIP # flips image left-right, as needed
         sleep(1) # camera warm-up time
 
-        streamer = PiStreamer(camera)
-        streamer.start()
+        streamer = PiStreamer(camera.resolution,camera.framerate)
+        self.camera.start_recording(streamer.output, 'yuv',resize=streamer.resolution) # NOTE: yuv matches the spawned process
         
         try:
             while camera.recording:
