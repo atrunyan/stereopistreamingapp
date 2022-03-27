@@ -33,7 +33,7 @@
 
       #videoCanvas {
 	  background-color: #888;
-	  width: 640px;
+	  width: 640px;	/*TODO: create option for other resolutions*/
 	  height: 480px;
       }
 
@@ -80,6 +80,11 @@
 	  margin: auto;
       }
 
+      ul#display_list{
+	  list-style-type: none; /*remove bullets*/
+	  padding: 0;
+	  margin: 0;
+      }
       
 
     </style>
@@ -103,18 +108,28 @@
       </canvas>
     </div>
 
-    <div class="button-container">
-      <button class="command tight" value="lights">
-	Lights On/Off
-      </button>
-    </div>
 
-    <div class="button-container">
-      <button class="command" value="stream">Stream On/Off</button>
-      <button class="command" value="capture">Capture</button>
-      <button class="command" value="startrec">Record On/Off</button>
-    </div>
+    <form>
 
+      <div class="button-container">
+        <a href=# id=lights>
+	  <button class='btn btn-default'>Lights On/Off</button>
+	</a>
+
+      </div>
+      <div class="button-container">
+        <a href=# id=capture>
+	  <button class='btn btn-default'>Capture</button>
+	</a>
+        <a href=# id=startrecord>
+	  <button class='btn btn-default'>Start Recording</button>
+	</a>
+        <a href=# id=stoprecord>
+	  <button class='btn btn-default'>Stop Recording</button>
+	</a>
+      </div>
+    </form>
+    
     <div class="logging_window" id="display">
       <ul id="display_list">
       </ul>
@@ -163,6 +178,53 @@
 	$('#display_list').prepend('<li>'+event.data+'</li>');
 	// TODO: replace ajax with straight javascript
     }
+
+    // Commands
+    $(function() {
+        $('a#lights').on('click', function(e) {
+            e.preventDefault()
+            $.getJSON('/cmd/lights',
+                      function(data) {
+			  //do nothing
+		      });
+            return false;
+        });
+    });
+
+    $(function() {
+        $('a#capture').on('click', function(e) {
+            e.preventDefault()
+            $.getJSON('/cmd/capture',
+                      function(data) {
+			  //do nothing
+		      });
+            return false;
+        });
+    });
+
+    
+    $(function() {
+        $('a#startrecord').on('click', function(e) {
+            e.preventDefault()
+            $.getJSON('/cmd/startrecord',
+                      function(data) {
+			  //do nothing
+		      });
+            return false;
+        });
+    });
+
+    $(function() {
+        $('a#stoprecord').on('click', function(e) {
+            e.preventDefault()
+            $.getJSON('/cmd/stoprecord',
+                      function(data) {
+			  //do nothing
+		      });
+            return false;
+        });
+    });
+    
 
     </script>
   
