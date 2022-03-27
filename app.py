@@ -10,13 +10,15 @@ from pygtail import Pygtail
 import logging, os
 from io import StringIO
 
+camera.start_streaming()
+
 
 # Set up app
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "SECRETKEYSECRETKEYSECRETKEYSECRETKEYSECRETKEY"
 app.config["DEBUG"] = os.environ.get("FLASK_DEBUG", False)
 app.config["JSON_AS_ASCII"] = False
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.WARNING)
 
 @app.route('/')
 def index():
@@ -35,6 +37,7 @@ def show_log():
 
 @app.route('/cmd/capture')
 def capture():
+    logging.debug("Attempt to capture")
     camera.capture()
     return("nothing")
 
@@ -50,11 +53,11 @@ def stop_recording():
 
 @app.route('/cmd/lights')
 def toggle_light():
+    logging.debug("lights")
     camera.toggle_lights()
     return("nothing")
 
 if __name__=='__main__':
-    camera.start_streaming()
     app.run(host='0.0.0.0', threaded=True, debug=False)
     # NOTE: changing debug to true causes problems with picamera
     

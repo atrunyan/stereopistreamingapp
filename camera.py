@@ -38,13 +38,14 @@ log = logging.getLogger('camera')
 log.setLevel(logging.INFO)
 log.addHandler(handler)
 
-
 def now():
     return datetime.now().isoformat().replace(':','')[:-7]    
 
 def capture():
+    global picam
     output = f'/home/pi/Pictures/{now()}.jpg'
     # NOTE: use video port to speed up capture
+    log.debug(picam)
     picam.capture(output, use_video_port=True, resize=None,
                   splitter_port=CAMERA_PORT, bayer=False)
     log.info("Image captured")
