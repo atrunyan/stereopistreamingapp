@@ -7,7 +7,6 @@ from pistreaming import PiStreamer
 import RPi.GPIO as GPIO
 
 LED_PIN = 4
-GPIO.cleanup()
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(LED_PIN,GPIO.OUT)
 LIGHTS_STATUS = True
@@ -16,6 +15,8 @@ GPIO.output(LED_PIN,LIGHTS_STATUS)
 CAMERA_PORT = 0
 RECORDER_PORT = 1
 STREAMING_PORT = 2
+
+RECORDING = False
 
 picam = PiCamera(camera_num=0, stereo_mode='none',
                  stereo_decimate=False, resolution=None,
@@ -49,13 +50,22 @@ def capture():
     log.info("Image captured")
 
 def start_recording():
+    global RECORDING
+    if RECORDING:
+        stop_recording()
     output = f'/home/pi/Videos/{now()}.h264'
     picam.start_recording(output, resize=None,
                           splitter_port=RECORDER_PORT)
+    RECORDING = True
     log.info("Recording started")
 
 def stop_recording():
+    global RECORDING
+    if not RECORDING:
+        log.debug("No recording in progress")
+        return
     picam.stop_recording(splitter_port=RECORDER_PORT)
+    RECORDING = False
     log.info("Recording ended")
 
 def start_streaming(resolution=(640,480)):
@@ -73,5 +83,6 @@ def toggle_lights(led_pin=4):
     global LIGHTS_STATUS
     LIGHTS_STATUS = not LIGHTS_STATUS
     GPIO.output(LED_PIN,LIGHTS_STATUS)
+    log.info(f"Lights toggled to {LIGHTS_STATUS}")
 
         
