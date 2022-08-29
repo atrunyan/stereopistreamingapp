@@ -29,11 +29,13 @@ _JSMPEG_HEADER = Struct('>4sHH')
 HTTP_PORT = 8082
 WS_PORT = 8084
 
-WIDTH = 640
+WIDTH = 1280
 HEIGHT = 480
 FRAMERATE = 24
 VFLIP = False
 HFLIP = False
+CAM_WIDTH = int((WIDTH+31)/32)*32
+CAM_HEIGHT = int((HEIGHT+15)/16)*16
 
 COLOR = u'#444'
 BGCOLOR = u'#333'
@@ -171,8 +173,8 @@ if __name__ == '__main__':
     # http_thread = Thread(target=http_server.serve_forever)
     # print('Starting HTTP server thread')
     # http_thread.start()
-    with picamera.PiCamera() as camera:
-        camera.resolution = (WIDTH, HEIGHT)
+    with picamera.PiCamera(stereo_mode = 'side-by-side', stereo_decimate = False) as camera:
+        camera.resolution = (CAM_WIDTH, CAM_HEIGHT)
         camera.framerate = FRAMERATE
         camera.vflip = VFLIP # flips image rightside up, as needed
         camera.hflip = HFLIP # flips image left-right, as needed

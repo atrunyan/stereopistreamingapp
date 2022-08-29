@@ -18,8 +18,8 @@ STREAMING_PORT = 2
 
 RECORDING = False
 
-picam = PiCamera(camera_num=0, stereo_mode='none',
-                 stereo_decimate=False, resolution=None,
+picam = PiCamera(camera_num=1, stereo_mode='side-by-side',
+                 stereo_decimate=False, resolution=(1280,480),
                  framerate=None, sensor_mode=0,
                  led_pin=None, clock_mode='reset',
                  framerate_range=None)
@@ -69,7 +69,7 @@ def stop_recording():
     RECORDING = False
     log.info("Recording ended")
 
-def start_streaming(resolution=(640,480)):
+def start_streaming(resolution=(1280,480)):
     streamer = PiStreamer(resolution,picam.framerate)
     picam.start_recording(streamer.output,'yuv',resize=streamer.resolution,
                           splitter_port=STREAMING_PORT)
